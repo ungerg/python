@@ -69,6 +69,7 @@ class Ship(pygame.sprite.Sprite):
         self.rect.center = (WINDOW_WIDTH / 2, WINDOW_HEIGHT - 100)
         self.laser_ready = True
 
+
 class Laser(pygame.sprite.Sprite):
     def __init__(self, surface, position, groups) -> None:
         super().__init__(groups)
@@ -100,7 +101,9 @@ class Meteor(pygame.sprite.Sprite):
         self.current_angle = 0
 
     def update(self, delta_time):
-        self.rect.center += self.speed * self.direction * delta_time
+        self.rect.center += (
+            self.speed * self.direction * delta_time * difficulty_multiplier
+        )
 
         self.current_angle += self.rotation_speed * delta_time
         self.image = pygame.transform.rotozoom(
@@ -179,7 +182,7 @@ def display_score(score):
 
 def add_to_score(amount):
     global score
-    score += amount
+    score += amount * difficulty_multiplier
 
 
 pygame.init()
@@ -219,6 +222,7 @@ clock = pygame.time.Clock()
 meteor_event = pygame.event.custom_type()
 pygame.time.set_timer(meteor_event, 500)
 score: float = 0
+difficulty_multiplier = 1
 
 while running and player:
     delta_time: float = clock.tick() / 1000
@@ -233,6 +237,7 @@ while running and player:
             event.key == pygame.K_KP_ENTER or event.key == pygame.K_RETURN
         ):
             score = 0
+            difficulty_multiplier = 1
             game_music.stop()
             game_music.play(loops=0)
             player.reset(all_sprites)
@@ -256,6 +261,13 @@ while running and player:
     # stop incrementing score when player dies
     if player.alive():
         score += clock.get_time() / 100
+        match score / 1000:
+            case x if x > 1 and x < 2:
+                difficulty_multiplier = 1.5
+            case x if x > 2 and x < 3:
+                difficulty_multiplier = 2
+            case x if x > 3:
+                difficulty_multiplier = 4
     display_score(score)
 
     pygame.display.update()
