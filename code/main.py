@@ -39,7 +39,7 @@ class Ship(pygame.sprite.Sprite):
             if current_time - self.last_shot_time >= self.laser_cooldown:
                 self.laser_ready = True
 
-    def update(self, delta_timed):
+    def update(self, delta_time):
         pressed_keys = pygame.key.get_pressed()
         self.direction.x = int(pressed_keys[pygame.K_d]) - int(pressed_keys[pygame.K_a])
         self.direction.y = int(pressed_keys[pygame.K_s]) - int(pressed_keys[pygame.K_w])
@@ -50,6 +50,10 @@ class Ship(pygame.sprite.Sprite):
         self.rect.center += self.direction * self.speed * delta_time
         if self.rect.centery >= WINDOW_HEIGHT:
             self.rect.centery = WINDOW_HEIGHT
+        if self.rect.left <= 0:
+            self.rect.left = 0
+        if self.rect.right >= WINDOW_WIDTH:
+            self.rect.right = WINDOW_WIDTH
 
         if pygame.mouse.get_just_pressed()[0] and self.laser_ready:
             laser_sound.play()
@@ -59,6 +63,11 @@ class Ship(pygame.sprite.Sprite):
 
         self.start_cooldown_timer()
 
+    def reset(self, groups):
+        self.add(groups)
+
+        self.rect.center = (WINDOW_WIDTH / 2, WINDOW_HEIGHT - 100)
+        self.laser_ready = True
 
 class Laser(pygame.sprite.Sprite):
     def __init__(self, surface, position, groups) -> None:
@@ -99,7 +108,11 @@ class Meteor(pygame.sprite.Sprite):
         )
         self.rect = self.image.get_frect(center=self.rect.center)
 
-        if self.rect.midbottom[1] <= 0:
+        if (
+            self.rect.midbottom[1] <= 0
+            or self.rect.right <= 0
+            or self.rect.left >= WINDOW_WIDTH
+        ):
             self.kill()
 
 
@@ -124,15 +137,16 @@ class ExplosionAnimation(pygame.sprite.Sprite):
 
 def check_collisions(add_to_score):
 
-    if pygame.sprite.spritecollide(
+    if player.alive() and pygame.sprite.spritecollide(
         sprite=player,
         group=meteor_sprites,
         dokill=True,
         collided=pygame.sprite.collide_mask,  # type: ignore
     ):
-        # player.kill()
         damage_sound.play()
+        game_music.stop()
         print("killed!")
+        player.kill()
 
     for laser in laser_sprites:
         hit_meteors = pygame.sprite.spritecollide(
@@ -189,7 +203,7 @@ damage_sound = pygame.mixer.Sound("audio/damage.ogg")
 damage_sound.set_volume(0.1)
 game_music = pygame.mixer.Sound("audio/game_music.wav")
 game_music.set_volume(0.05)
-game_music.play()
+game_music.play(loops=0)
 
 all_sprites = pygame.sprite.Group()
 meteor_sprites = pygame.sprite.Group()
@@ -215,7 +229,15 @@ while running and player:
         ):
             running = False
 
-        if event.type == meteor_event:
+        if event.type == pygame.KEYDOWN and (
+            event.key == pygame.K_KP_ENTER or event.key == pygame.K_RETURN
+        ):
+            score = 0
+            game_music.stop()
+            game_music.play(loops=0)
+            player.reset(all_sprites)
+
+        if player.alive and event.type == meteor_event:
             Meteor(
                 meteor_surface,
                 (randint(0, WINDOW_WIDTH), -20),
@@ -229,9 +251,12 @@ while running and player:
     # re-draw the background every frame so we don't get blurring
     display_surface.fill((20, 20, 20))
 
-    score += clock.get_time() / 100
-    display_score(score)
     all_sprites.draw(display_surface)
+
+    # stop incrementing score when player dies
+    if player.alive():
+        score += clock.get_time() / 100
+    display_score(score)
 
     pygame.display.update()
 
