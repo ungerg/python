@@ -23,7 +23,7 @@ class Ship(pygame.sprite.Sprite):
 
         self.image = pygame.image.load("images/player.png").convert_alpha()
         self.rect: pygame.FRect = self.image.get_frect(
-            center=(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2)
+            center=(WINDOW_WIDTH / 2, WINDOW_HEIGHT - 100)
         )
 
         self.direction = pygame.math.Vector2()
