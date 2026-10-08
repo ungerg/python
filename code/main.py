@@ -1,10 +1,7 @@
 import pygame
 from random import randint, uniform
 
-from game import start_game
-
-WINDOW_HEIGHT = 720
-WINDOW_WIDTH = 1280
+from game import Game
 
 num_stars = 20
 
@@ -41,7 +38,7 @@ class Ship(pygame.sprite.Sprite):
             if current_time - self.last_shot_time >= self.laser_cooldown:
                 self.laser_ready = True
 
-    def update(self, delta_timed):
+    def update(self, delta_time):
         pressed_keys = pygame.key.get_pressed()
         self.direction.x = int(pressed_keys[pygame.K_d]) - int(pressed_keys[pygame.K_a])
         self.direction.y = int(pressed_keys[pygame.K_s]) - int(pressed_keys[pygame.K_w])
@@ -170,41 +167,25 @@ def add_to_score(amount):
     score += amount
 
 
-start_game()
+game = Game()
 
-display_surface: pygame.Surface = pygame.display.set_mode(
-    size=(WINDOW_WIDTH, WINDOW_HEIGHT)
-)
-pygame.display.set_caption("Python Game!")
+game.start_game()
 
-meteor_surface = pygame.image.load("images/meteor.png").convert_alpha()
-star_surface = pygame.image.load("images/star.png").convert_alpha()
-laser_surface = pygame.image.load("images/laser.png").convert_alpha()
-font = pygame.font.Font("images/Oxanium-Bold.ttf", 20)
-explosion_frames = [
-    pygame.image.load(f"images/explosion/{i}.png").convert_alpha() for i in range(21)
-]
-laser_sound = pygame.mixer.Sound("audio/laser.wav")
-laser_sound.set_volume(0.1)
-explosion_sound = pygame.mixer.Sound("audio/explosion.wav")
-explosion_sound.set_volume(0.1)
-damage_sound = pygame.mixer.Sound("audio/damage.ogg")
-damage_sound.set_volume(0.1)
-game_music = pygame.mixer.Sound("audio/game_music.wav")
-game_music.set_volume(0.05)
-game_music.play()
+# font = pygame.font.Font("images/Oxanium-Bold.ttf", 20)
+# explosion_frames = [
+#     pygame.image.load(f"images/explosion/{i}.png").convert_alpha() for i in range(21)
+# ]
+# laser_sound = pygame.mixer.Sound("audio/laser.wav")
+# laser_sound.set_volume(0.1)
+# explosion_sound = pygame.mixer.Sound("audio/explosion.wav")
+# explosion_sound.set_volume(0.1)
+# damage_sound = pygame.mixer.Sound("audio/damage.ogg")
+# damage_sound.set_volume(0.1)
+# game_music = pygame.mixer.Sound("audio/game_music.wav")
+# game_music.set_volume(0.05)
+# game_music.play()
 
-all_sprites = pygame.sprite.Group()
-meteor_sprites = pygame.sprite.Group()
-laser_sprites = pygame.sprite.Group()
 
-for i in range(num_stars):
-    Star(star_surface, all_sprites)
-
-player = Ship(all_sprites)
-
-running = True
-clock = pygame.time.Clock()
-meteor_event = pygame.event.custom_type()
-pygame.time.set_timer(meteor_event, 500)
-score: float = 0
+# meteor_event = pygame.event.custom_type()
+# pygame.time.set_timer(meteor_event, 500)
+# score: float = 0
